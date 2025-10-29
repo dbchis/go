@@ -29,7 +29,7 @@ func worker(id int, jobs <-chan string, results chan<- string) {
 	}
 }
 
-func main() {
+func run() {
 	// Danh sách công việc
 	urls := []string{
 		"google.com",

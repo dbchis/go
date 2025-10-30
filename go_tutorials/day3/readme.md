@@ -30,7 +30,6 @@ Nếu không có cơ chế chờ, hàm `main` (Goroutine chính) sẽ kết thú
 
 ### Ví dụ: Website Checker (Phiên bản `WaitGroup`)
 
-```go
 package main
 
 import (
@@ -72,6 +71,7 @@ func main() {
 
     fmt.Println("Tất cả website đã được kiểm tra xong!")
 }
+
 ## 2. `sync.Mutex` (Ổ khóa)
 
 `Mutex` (Mutual Exclusion - Loại trừ lẫn nhau) là một **ổ khóa**. Nó dùng để bảo vệ "vùng nguy hiểm" (critical section) - nơi có biến đang được chia sẻ.

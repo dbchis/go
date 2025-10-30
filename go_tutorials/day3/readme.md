@@ -134,7 +134,8 @@ func main() {
     
     wg.Wait()
     fmt.Println("Kết quả cuối cùng:", counter) // Luôn là 1000
-}```
+}
+
 ###Lưu ý về defer: defer mu.Unlock() là một pattern rất an toàn. Nó đảm bảo khóa luôn được mở, ngay cả khi hàm increment bị panic (lỗi nghiêm trọng) giữa chừng. Nếu không defer, khóa có thể bị "kẹt" vĩnh viễn, gây ra deadlock.
 ## 3. `sync.RWMutex` (Khóa Đọc/Viết)
 

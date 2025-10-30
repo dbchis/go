@@ -30,6 +30,8 @@ Nếu không có cơ chế chờ, hàm `main` (Goroutine chính) sẽ kết thú
 
 ### Ví dụ: Website Checker (Phiên bản `WaitGroup`)
 
+
+```
 package main
 
 import (
@@ -70,7 +72,8 @@ func main() {
     wg.Wait()
 
     fmt.Println("Tất cả website đã được kiểm tra xong!")
-}
+}```
+
 
 ## 2. `sync.Mutex` (Ổ khóa)
 
@@ -134,7 +137,8 @@ func main() {
     
     wg.Wait()
     fmt.Println("Kết quả cuối cùng:", counter) // Luôn là 1000
-}
+}```
+
 
 ###Lưu ý về defer: defer mu.Unlock() là một pattern rất an toàn. Nó đảm bảo khóa luôn được mở, ngay cả khi hàm increment bị panic (lỗi nghiêm trọng) giữa chừng. Nếu không defer, khóa có thể bị "kẹt" vĩnh viễn, gây ra deadlock.
 ## 3. `sync.RWMutex` (Khóa Đọc/Viết)

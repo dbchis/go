@@ -31,48 +31,50 @@ Nếu không có cơ chế chờ, hàm `main` (Goroutine chính) sẽ kết thú
 ### Ví dụ: Website Checker (Phiên bản `WaitGroup`)
 
 
-```
-package main
+    ```
+    package main
 
-import (
-    "fmt"
-    "net/http"
-    "sync"
-)
+    import (
+        "fmt"
+        "net/http"
+        "sync"
+    )
 
-func worker(wg *sync.WaitGroup, id int, url string) {
-    // 3. Đảm bảo báo "Done" khi hàm kết thúc
-    defer wg.Done()
+    func worker(wg *sync.WaitGroup, id int, url string) {
+        // 3. Đảm bảo báo "Done" khi hàm kết thúc
+        defer wg.Done()
 
-    fmt.Printf("Worker %d đang xử lý: %s\n", id, url)
-    if _, err := http.Get(url); err != nil {
-        fmt.Printf("[LỖI] Worker %d, %s\n", id, url)
-    } else {
-        fmt.Printf("[OK] Worker %d: %s\n", id, url)
-    }
-}
-
-func main() {
-    urls := []string{
-        "[http://google.com](http://google.com)",
-        "[http://facebook.com](http://facebook.com)",
-        "[http://github.com](http://github.com)",
+        fmt.Printf("Worker %d đang xử lý: %s\n", id, url)
+        if _, err := http.Get(url); err != nil {
+            fmt.Printf("[LỖI] Worker %d, %s\n", id, url)
+        } else {
+            fmt.Printf("[OK] Worker %d: %s\n", id, url)
+        }
     }
 
-    // 1. Khai báo WaitGroup
-    var wg sync.WaitGroup
+    func main() {
+        urls := []string{
+            "[http://google.com](http://google.com)",
+            "[http://facebook.com](http://facebook.com)",
+            "[http://github.com](http://github.com)",
+        }
 
-    for i, url := range urls {
-        // 2. Thêm 1 công việc vào bộ đếm
-        wg.Add(1)
-        go worker(&wg, i+1, url)
-    }
+        // 1. Khai báo WaitGroup
+        var wg sync.WaitGroup
 
-    // 4. Chờ (BLOCK) cho đến khi bộ đếm về 0
-    wg.Wait()
+        for i, url := range urls {
+            // 2. Thêm 1 công việc vào bộ đếm
+            wg.Add(1)
+            go worker(&wg, i+1, url)
+        }
 
-    fmt.Println("Tất cả website đã được kiểm tra xong!")
-}```
+        // 4. Chờ (BLOCK) cho đến khi bộ đếm về 0
+        wg.Wait()
+
+        fmt.Println("Tất cả website đã được kiểm tra xong!")
+    }```
+
+---
 
 
 ## 2. `sync.Mutex` (Ổ khóa)
@@ -110,37 +112,39 @@ Hậu quả là dữ liệu cuối cùng bị sai lệch, không thể đoán tr
 
 ### Ví dụ: Sửa lỗi "Bộ đếm"
 
-```go
-var counter int
-var mu sync.Mutex // Khai báo khóa
-var wg sync.WaitGroup
+    ```go
+    var counter int
+    var mu sync.Mutex // Khai báo khóa
+    var wg sync.WaitGroup
 
-func increment() {
-    // 1. Khóa lại trước khi vào "vùng nguy hiểm"
-    mu.Lock()
-    
-    // 2. Dùng defer để đảm bảo LUÔN MỞ KHÓA
-    // (Kể cả khi hàm panic, nó vẫn được gọi)
-    defer mu.Unlock() 
-    
-    counter++ // Chỉ một Goroutine được làm điều này tại một thời điểm
-}
-
-func main() {
-    for i := 0; i < 1000; i++ {
-        wg.Add(1)
-        go func() {
-            defer wg.Done()
-            increment()
-        }()
+    func increment() {
+        // 1. Khóa lại trước khi vào "vùng nguy hiểm"
+        mu.Lock()
+        
+        // 2. Dùng defer để đảm bảo LUÔN MỞ KHÓA
+        // (Kể cả khi hàm panic, nó vẫn được gọi)
+        defer mu.Unlock() 
+        
+        counter++ // Chỉ một Goroutine được làm điều này tại một thời điểm
     }
-    
-    wg.Wait()
-    fmt.Println("Kết quả cuối cùng:", counter) // Luôn là 1000
-}```
 
+    func main() {
+        for i := 0; i < 1000; i++ {
+            wg.Add(1)
+            go func() {
+                defer wg.Done()
+                increment()
+            }()
+        }
+        
+        wg.Wait()
+        fmt.Println("Kết quả cuối cùng:", counter) // Luôn là 1000
+    }```
 
 ###Lưu ý về defer: defer mu.Unlock() là một pattern rất an toàn. Nó đảm bảo khóa luôn được mở, ngay cả khi hàm increment bị panic (lỗi nghiêm trọng) giữa chừng. Nếu không defer, khóa có thể bị "kẹt" vĩnh viễn, gây ra deadlock.
+
+---
+
 ## 3. `sync.RWMutex` (Khóa Đọc/Viết)
 
 `RWMutex` là một phiên bản `Mutex` được tối ưu hóa cho kịch bản **Đọc nhiều, Ghi ít**.
@@ -176,21 +180,21 @@ func main() {
 
 ### Ví dụ: Quản lý Config Map
 
-```go
-var config = make(map[string]string)
-var mu sync.RWMutex // Dùng RWMutex
-var wg sync.WaitGroup
+    ```go
+    var config = make(map[string]string)
+    var mu sync.RWMutex // Dùng RWMutex
+    var wg sync.WaitGroup
 
-// Hàng trăm Goroutine có thể gọi hàm này cùng lúc
-func readConfig(key string) string {
-    mu.RLock() // Lấy khóa ĐỌC (nhiều người vào được)
-    defer mu.RUnlock()
-    return config[key]
-}
+    // Hàng trăm Goroutine có thể gọi hàm này cùng lúc
+    func readConfig(key string) string {
+        mu.RLock() // Lấy khóa ĐỌC (nhiều người vào được)
+        defer mu.RUnlock()
+        return config[key]
+    }
 
-// Chỉ một Goroutine gọi hàm này
-func writeConfig(key, value string) {
-    mu.Lock() // Lấy khóa GHI (độc quyền, chờ độc giả ra hết)
-    defer mu.Unlock()
-    config[key] = value
-}```
+    // Chỉ một Goroutine gọi hàm này
+    func writeConfig(key, value string) {
+        mu.Lock() // Lấy khóa GHI (độc quyền, chờ độc giả ra hết)
+        defer mu.Unlock()
+        config[key] = value
+    }```

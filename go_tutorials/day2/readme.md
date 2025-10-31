@@ -127,3 +127,5 @@
 * **`for url := range jobs` (trong `worker`):** Đây là cách tuyệt vời để nhận việc. Vòng `for range` tự động chờ và lấy giá trị từ channel, và tự động kết thúc khi channel `jobs` được `close()`.
 * **Vòng lặp `for...; <-results` (trong `main`):** Bạn đã hiểu rằng toán tử `<-results` luôn chỉ lấy ra **một** kết quả tại một thời điểm (theo thứ tự FIFO - Vào trước Ra trước). Đó là lý do bạn cần lặp lại `numJobs` lần để gom đủ kết quả.
 * **`select` với `time.After`:** Bạn đã dùng `select` để chờ giữa hai sự kiện: "nhận được kết quả" (`<-results`) HOẶC "hết giờ" (`<-timeout`). Đây là một pattern cực kỳ phổ biến và mạnh mẽ trong thực tế.
+
+go mod init <project-name>
